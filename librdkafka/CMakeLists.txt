@@ -1,4 +1,4 @@
-set(kafka_dir ../../../src/)
+set(kafka_dir librdkafka/src/)
 
 set(sources
         crc32c.c
@@ -81,8 +81,8 @@ set(sources
 
 list(TRANSFORM sources PREPEND ${kafka_dir})
 
-idf_component_register(SRCS "producer.c" ${sources}
-                    INCLUDE_DIRS "." ${kafka_dir})
+idf_component_register(SRCS ${sources}
+                       INCLUDE_DIRS "port/include" ${kafka_dir})
 
 target_compile_options(${COMPONENT_LIB} PRIVATE "-Wno-format")
 target_compile_options(${COMPONENT_LIB} PRIVATE "-Wno-incompatible-pointer-types")
