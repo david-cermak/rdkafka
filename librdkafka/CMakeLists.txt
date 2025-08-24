@@ -17,6 +17,9 @@ set(sources
         rdkafka_event.c
         rdkafka_feature.c
         rdkafka_lz4.c
+        lz4frame.c
+        lz4.c
+        lz4hc.c
         rdkafka_metadata.c
         rdkafka_metadata_cache.c
         rdkafka_msg.c
@@ -76,6 +79,7 @@ set(sources
         tinycthread_extra.c
         rdxxhash.c
         cJSON.c
+#        rdkafka_plugin.c
 )
 
 
