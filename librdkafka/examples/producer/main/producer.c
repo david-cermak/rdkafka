@@ -6,9 +6,15 @@
 /* Typical include path would be <librdkafka/rdkafka.h>, but this program
  * is builtin from within the librdkafka source tree and thus differs. */
 #include "rdkafka.h"
+#include "nvs_flash.h"
+#include "esp_event.h"
+#include "esp_netif.h"
+#include "esp_log.h"
+#include "protocol_examples_common.h"
 
-#define BROKERS "broker.com"
-#define TOPIC "topic"
+// #define BROKERS "192.168.0.29:35273"
+#define BROKERS "localhost:35273"
+#define TOPIC "test"
 
 
 static volatile sig_atomic_t run = 1;
@@ -37,13 +43,12 @@ dr_msg_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *opaque) {
 }
 
 
-
 static int producer(void)
 {
         rd_kafka_t *rk;        /* Producer instance handle */
         rd_kafka_conf_t *conf; /* Temporary configuration object */
-        char errstr[512];      /* librdkafka API error reporting buffer */
-        char buf[512];         /* Message value temporary buffer */
+        static char errstr[512];      /* librdkafka API error reporting buffer */
+        static char buf[512];         /* Message value temporary buffer */
         const char *brokers;   /* Argument: broker list */
         const char *topic;     /* Argument: topic to produce to */
 
@@ -99,7 +104,8 @@ static int producer(void)
                 "%% Or just hit enter to only serve delivery reports\n"
                 "%% Press Ctrl-C or Ctrl-D to exit\n");
 
-        while (run && fgets(buf, sizeof(buf), stdin)) {
+        strcpy(buf, "Message from ESP32");
+        while (1) {
                 size_t len = strlen(buf);
                 rd_kafka_resp_err_t err;
 
@@ -111,6 +117,7 @@ static int producer(void)
                         rd_kafka_poll(rk, 0 /*non-blocking */);
                         continue;
                 }
+                ESP_LOGI("producer", "%s %d", buf, len);
 
                 /*
                  * Send/Produce message.
@@ -183,6 +190,7 @@ static int producer(void)
                  * delivery report callback served (and any other callbacks
                  * you register). */
                 rd_kafka_poll(rk, 0 /*non-blocking*/);
+                break;
         }
 
 
@@ -199,13 +207,19 @@ static int producer(void)
                         rd_kafka_outq_len(rk));
 
         /* Destroy the producer instance */
-        rd_kafka_destroy(rk);
+        // rd_kafka_destroy(rk);
 
         return 0;
 }
 
 void app_main(void)
 {
+        // Initialize ESP-IDF components
+        ESP_ERROR_CHECK(nvs_flash_init());
+        ESP_ERROR_CHECK(esp_netif_init());
+        ESP_ERROR_CHECK(esp_event_loop_create_default());
+        ESP_ERROR_CHECK(example_connect());
+        // return;
         int ret = producer();
         printf("Producer returned %d\n", ret);
 }
