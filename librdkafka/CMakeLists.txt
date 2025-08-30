@@ -86,9 +86,21 @@ set(sources
 list(TRANSFORM sources PREPEND ${kafka_dir})
 
 idf_component_register(SRCS ${sources}
+                            "port/wrapped_functions.c"
+                            "port/stubs.c"
                        INCLUDE_DIRS "port/include" ${kafka_dir})
 
 target_compile_options(${COMPONENT_LIB} PRIVATE "-Wno-format")
 target_compile_options(${COMPONENT_LIB} PRIVATE "-Wno-incompatible-pointer-types")
 target_compile_options(${COMPONENT_LIB} PRIVATE "-Wno-error=char-subscripts")
 target_compile_options(${COMPONENT_LIB} PRIVATE "-Wno-error=maybe-uninitialized")
+
+set(WRAP_FUNCTIONS lwip_sendmsg
+                   lwip_getsockopt
+                   )
+
+foreach(wrap ${WRAP_FUNCTIONS})
+    target_link_libraries(${COMPONENT_LIB} INTERFACE "-Wl,--wrap=${wrap}")
+endforeach()
+
+#set_source_files_properties("librdkafka/src/rdkafka_transport.c" PROPERTIES COMPILE_OPTIONS "-UMSG_NOSIGNAL")

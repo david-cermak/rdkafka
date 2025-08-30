@@ -13,20 +13,11 @@
 #include "protocol_examples_common.h"
 
 // #define BROKERS "192.168.0.29:35273"
-#define BROKERS "localhost:35273"
-#define TOPIC "test"
+#define BROKERS "localhost:9092"
+#define TOPIC "TEST"
 
 
 static volatile sig_atomic_t run = 1;
-
-/**
- * @brief Signal termination of program
- */
-static void stop(int sig) {
-    run = 0;
-    fclose(stdin); /* abort fgets() */
-}
-
 
 static void
 dr_msg_cb(rd_kafka_t *rk, const rd_kafka_message_t *rkmessage, void *opaque) {
@@ -225,26 +216,10 @@ void app_main(void)
 }
 
 
-/// -----
-///
-int pthread_kill(pthread_t thread, int sig)
+int lwip_hook_netconn_external_resolve(const char *name, ip_addr_t *addr, u8_t addrtype, err_t *err)
 {
-        if (sig <= 0 || sig >= NSIG) {   // NSIG is usually 32 or 64 depending on libc
-                return EINVAL;
-        }
-
-        if ((void*)thread == NULL) {
-                return ESRCH;
-        }
-
-        // In ESP-IDF pthread shim, pthread_t is just a TaskHandle_t
-        TaskHandle_t handle = (TaskHandle_t)thread;
-
-        // Deliver signal to the target task (very simplified):
-        // Use FreeRTOS notifications as "signals"
-        if (xTaskNotify(handle, (1U << sig), eSetBits) == pdPASS) {
-                return 0;
-        }
-
-        return ESRCH;
+        printf("name: %s\n", name);
+        IP_ADDR4(addr, 192,168,0,29);
+        *err = ERR_OK;
+        return 1;
 }
